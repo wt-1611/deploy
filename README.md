@@ -25,10 +25,22 @@ redis6_x86.tar.gz
 ```bash
 # in package/x86_64/<euler> or <rhel>
 $ repotrack sysstat iotop net-tools vim nc tcpdump clamav telnet unzip tar ncurses-compat-libs
-#ruler 
-$ python3-policycoreutils python3-libselinux
+#euler selinux
+$ repotrock python3-policycoreutils python3-libselinux
 #rhel7
 $ repotrack MySQL-python
 #euler
 $ repotrack python3-mysql
+```
+## Use
+```bash
+$ vim hosts
+#ip
+```
+```bash
+$ vim config
+#configurage
+```
+```bash
+$ bash begin.sh
 ```
