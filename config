@@ -1,0 +1,6 @@
+ #该选项指定mysql是否为集群，single（单节点）/cluster>（主从）,
+ #若指定为cluster模式，还需要在hosts文件，确认master和slave。
+mode: "cluster"
+
+#为app项目创建用户，app项目将会部署jdk、tomcat，其所属者将为该用户
+appuser: "spring"

@@ -1,0 +1,23 @@
+- name: mkdir stsweb directory
+  file:
+    path: /app/stsweb
+    state: directory
+    owner: stsweb
+    group: stsweb
+
+- name: init nginx
+  copy:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+
+- name: init nginx logrotate
+  copy:
+    src: logrotate.nginx
+    dest: /etc/logrotate.d/nginx
+
+
+- name: start nginx
+  service: 
+    name: nginx
+    state: restarted
+    enabled: yes

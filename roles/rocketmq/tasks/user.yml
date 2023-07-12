@@ -1,0 +1,19 @@
+---
+- name: set pass
+  set_fact:
+    spass: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
+
+
+- name:  useradd
+  user: 
+    comment: "v1 version"
+    shell: /bin/bash
+    password: "{{ spass| password_hash('sha512') }}"
+    update_password: always
+    state: present
+    name: "rocketmq"
+
+- name: record  pass
+  shell: |
+    echo "{{inventory_hostname}},rocketmq,{{ spass }}" >> {{ playbook_dir }}/out.csv
+  delegate_to: 127.0.0.1

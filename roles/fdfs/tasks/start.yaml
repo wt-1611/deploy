@@ -1,0 +1,15 @@
+---
+
+- name: start trackerd service
+  service:
+    name: fdfs_trackerd
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: start storaged service
+  service:
+    name: fdfs_storaged
+    state: started
+    enabled: yes
+    daemon_reload: yes

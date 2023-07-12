@@ -1,0 +1,111 @@
+[client] 
+socket={{  datadir }}/mysql.sock
+ 
+[mysql]  
+port={{ mport }}
+no-auto-rehash  
+default-character-set=utf8 
+ 
+[mysqld]
+
+pid-file={{  datadir }}/mysqld.pid
+character-set-server=utf8
+basedir=/opt/mysql
+#####dir#####  
+datadir={{  datadir }}
+socket={{  datadir }}/mysql.sock
+log-error={{ log }}/mysql.log
+#慢查询
+slow_query_log_file={{ log }}/slow.log 
+log_timestamps=SYSTEM
+
+######replication#####
+gtid-mode = on 
+log-slave-updates=ON 
+enforce-gtid-consistency=ON 
+master-info-file={{  datadir }}/master.info  
+relay-log = {{  datalog }}/mysqld-relay-bin  
+relay_log_info_file={{  datalog }}/relay-log.info  
+relay-log-index={{  datalog }}/mysqld-relay-bin.index  
+skip-slave-start 
+
+#####binlog#####  
+log-bin={{  datalog }}/mysql-bin  
+
+{% if master is defined %}
+
+server-id=1
+
+{% elif slave is defined %}
+
+server-id=2
+read-only=1
+replicate-ignore-db = mysql
+replicate-wild-ignore-table = mysql.%
+{% else %}
+
+server-id=3
+
+{% endif %}
+
+binlog_cache_size=32K  
+binlog_format=ROW  
+sync_binlog=0  
+expire_logs_days=7 
+log_bin_trust_function_creators=1
+
+#####not innodb options #####  
+back_log=200  
+max_connections=1000  
+max_allowed_packet=24M  
+max_heap_table_size=64M  
+sort_buffer_size=2M  
+join_buffer_size=4M  
+thread_cache_size=400  
+tmp_table_size=64M  
+
+
+#####server#####  
+default-storage-engine=INNODB  
+lower_case_table_names=1  
+long_query_time=1 
+slow_query_log=1  
+port=3306  
+# skip-name-resolve  
+skip-ssl  
+max_connect_errors=65535  
+max_user_connections=950 
+ 
+#####innodb#####  
+innodb_buffer_pool_size = 2G
+innodb_file_per_table = 1  
+innodb_flush_log_at_trx_commit = 0
+innodb_lock_wait_timeout = 100  
+innodb_log_buffer_size= 100M  
+innodb_log_file_size = 30M  
+innodb_log_files_in_group = 4  
+innodb_thread_concurrency = 16  
+innodb_max_dirty_pages_pct = 50  
+#transaction-isolation = READ-COMMITTED  
+innodb_buffer_pool_instances=4 
+#innodb_force_recovery = 1
+
+########safe#######
+#plugin-load-add=connection_control.so
+#plugin-load-add=validate_password.so
+#validate_password_policy=MEDIUM
+#validate_password_length=8
+#validate_password_mixed_case_count=1
+#validate_password_number_count=1
+#validate_password_special_char_count=1
+#default_password_lifetime=90
+#connection_control_failed_connections_threshold=5
+#connection_control_min_connection_delay=60000
+#interactive_timeout=300
+#wait_timeout=300
+#general_log=on
+#ssl
+#ssl-ca=/var/lib/mysql/ssl/ca.pem
+#ssl-cert=/var/lib/mysql/ssl/server-cert.pem
+#ssl-key=/var/lib/mysql/ssl/server-key.pem
+#require_secure_transport=ON

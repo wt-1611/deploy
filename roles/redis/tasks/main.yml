@@ -1,0 +1,21 @@
+---
+#tasks file for redis
+- name: redis-cluster-install | Check if Redis already installed
+  shell: "ps aux | grep redi[s] | wc -l"
+  register: num
+
+
+- name: begin redis
+  block:
+    - include_tasks: redis-cluster-install-rhel.yml
+      tags: [redis-cluster-install, install]
+
+    - import_tasks: redis-cluster-operating-system-tweaks.yml
+      tags: [redis-cluster-operating-system-tweaks, operating-system-tweaks]
+
+    - import_tasks: redis-cluster-configure.yml
+      tags: [redis-cluster-configure, configure]
+
+    - import_tasks: redis-cluster-create-cluster.yml
+      tags: [redis-cluster-create-cluster, create-cluster]
+  when: num.stdout == "0"

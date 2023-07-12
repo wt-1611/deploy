@@ -1,0 +1,26 @@
+---
+# tasks file for mysql
+
+- name: Check if Mysql already installed
+  shell: "ps aux | grep mysq[l] | wc -l"
+  register: num
+
+- name: begin mysql
+  block:
+    - import_tasks: mysql-install-rhel.yml
+      tags: [mysql-install, install]
+
+    - import_tasks: mysql-init-dir.yml
+      tags: [init-dir]
+
+    - import_tasks: mysql-config-system.yml
+      tags: [mysql-config-system,system]
+
+    - import_tasks: mysql-master-slave.yml
+      tags: [mysql-master-slave]
+      when: mode == "cluster" and  play_hosts|length >=2
+
+    - import_tasks: mysql-backup.yaml
+      tags: [backup]
+      when:  master is defined or play_hosts|length == 1
+  when: num.stdout == "0"

@@ -1,0 +1,32 @@
+---
+- name: get pk
+  get_url: 
+    url: "{{ javaurl }}/{{ activemqTar }}"
+    dest: /tmp
+    timeout: 5
+
+- name: unzip  tar
+  unarchive:
+   src: "/tmp/{{ activemqTar }}"
+   dest: /opt
+   owner: activemq
+   group: activemq
+   copy: no
+  
+
+- name: create soft link
+  file:
+   src: /opt/{{ activemq }}
+   path: /opt/activemq
+   state: link
+
+- name: copy env of activemq
+  copy:
+    src: "activemq.sh"
+    dest: /etc/profile.d/
+
+- name: start file
+  file:
+   src: /opt/activemq/bin/activemq
+   path:  /etc/init.d/activemq
+   state: link

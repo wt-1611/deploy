@@ -1,0 +1,22 @@
+---
+- name: set pass
+  set_fact:
+    spass: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
+
+- name: hcapp groupadd
+  group: 
+    name: "hcapp"
+
+- name:  useradd
+  user: 
+    name: "{{ appuser }}"
+    groups: "hcapp"
+    password: "{{ spass| password_hash('sha512') }}" 
+    update_password: always
+
+- name: record  pass
+  shell: |
+    echo "{{inventory_hostname}},{{ appuser }},{{ spass }}" >> {{ playbook_dir }}/out.csv
+  delegate_to: 127.0.0.1
+
+

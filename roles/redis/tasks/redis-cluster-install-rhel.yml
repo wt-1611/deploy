@@ -1,0 +1,108 @@
+---
+- name: redis-cluster-install  | create conn pass
+  set_fact:
+    conn_pass: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
+  run_once: true
+  
+
+#- name: redis-cluster-install | Check if Redis already installed
+#  shell: "ps aux | grep redi[s] | wc -l"
+#  register: num
+#  #failed_when: num.stdout != "0"
+#
+#- name:  redis-cluster-install | if already 
+#  fail:
+#    msg: "redis already exists"
+#  when: num.stdout != "0"
+
+- name: redis-cluster-install  | node num
+  set_fact:
+    redis_num: "{{ play_hosts|length  }}"
+
+
+- name: redis-cluster-install  | node 1
+  set_fact:
+    port:
+      - 7000
+      - 7001
+      - 7002
+      - 7003
+      - 7004
+      - 7005
+  when: redis_num == "1"
+
+
+
+- name: redis-cluster-install  | node 3
+  set_fact:
+    port:
+      - 7000
+      - 7001
+  when: redis_num == "3"
+
+- name: redis-cluster-install  | node 6
+  set_fact:
+    port:
+      - 7000
+  when: redis_num == "6"
+
+- name: redis-cluster-install | Check num number
+  fail:
+    msg: "Node number. The value must be 1, 3, or 6"
+  when: redis_num != "1" and redis_num != "3" and redis_num != "6"
+
+
+
+- name: redis-cluster-install | Save pass
+  shell:  |
+    echo "{{inventory_hostname}},redis,{{ pass }}" >> {{ playbook_dir }}/out.csv
+    echo "{{inventory_hostname}},conn_redis,{{ conn_pass }}" >> {{ playbook_dir }}/out.csv
+  delegate_to: 127.0.0.1
+  no_log: true
+
+
+- name: redis-cluster-install | Create user
+  user:
+    name: redis
+    comment: "v1 version"
+    shell: /bin/bash
+    password: "{{ pass| password_hash('sha512') }}"
+    update_password: always
+    state: present
+  no_log: true
+
+
+- name: redis-cluster-install | get pk
+  get_url:
+    url: "{{ url }}/{{ redisTar }}"
+    dest: /tmp
+
+- name: redis-cluster-install | Unarchive redis6.tar.gz
+  unarchive:
+    src: "/tmp/{{ redisTar }}"
+    dest: /opt/
+    owner: redis
+    group: redis
+    copy: no
+
+
+- name: redis-cluster-install | Create a directory for the systemd service modification
+  file:
+    path: '/usr/lib/systemd/system/redis{{ item }}.service.d'
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  with_items: "{{ port }}" 
+
+- name: redis-cluster-install | Update Redis systemd resource limit
+  template:
+    src: custom.conf.j2
+    dest: '/usr/lib/systemd/system/redis{{ item }}.service.d/custom.conf'
+    owner: root
+    group: root
+    mode: 0644
+  with_items: "{{ port }}" 
+  #notify: systemd reload
+  tags:
+    - update_redis_systemd_resource_limit

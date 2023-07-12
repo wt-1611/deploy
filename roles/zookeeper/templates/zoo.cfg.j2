@@ -1,0 +1,22 @@
+#tick,一个tick2000ms
+tickTime=2000
+initLimit=10
+#领导人与跟随者心跳间隔tick
+syncLimit=5
+dataDir=/var/lib/zookeeper/data
+#事务日志
+#dataLogDir=/var/log/zookeeper
+
+{% for i in range(play_hosts|length) %}
+server.{{i+1}}={{ play_hosts[i] }}:2888:3888
+{% endfor %}
+
+
+clientPort=2181
+#客户端连接数
+maxClientCnxns=0
+#保留多少个快照，zk内存中数据会作为快照保存下来
+autopurge.snapRetainCount=3
+#多久删一次日志数据
+autopurge.purgeInterval=1
+#4lw.commands.whitelist=stat, ruok, conf, isro,cons

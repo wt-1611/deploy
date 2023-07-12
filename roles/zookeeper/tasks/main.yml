@@ -1,0 +1,19 @@
+---
+# tasks file for zookeeper
+- name:  Check if zookeeper already installed
+  shell: "ps aux | grep zookeepe[r] | wc -l"
+  register: num
+
+
+- name: begin zk
+  block:
+    #创建用户
+    - import_tasks: user.yml
+      tags: [user]
+    #安装
+    - import_tasks: install.yml
+      tags: [dep]
+    #配置
+    - import_tasks: conf.yml
+      tags: [conf]
+  when:  play_hosts|length >= 3  and  play_hosts|length % 3  == 0 and num.stdout == "0"

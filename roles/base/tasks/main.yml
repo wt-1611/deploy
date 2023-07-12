@@ -1,0 +1,15 @@
+---
+# tasks file for base
+
+- include_tasks: repo.yml
+  tags: [repo]
+
+- import_tasks: install-base-software.yml
+  tags: [base-software]
+
+- name:  init pass file
+  shell: |
+    [ -f {{ playbook_dir }}/out.csv ] && mv  {{ playbook_dir }}/out.csv {{ playbook_dir }}/out.csv.{{ ansible_date_time.iso8601 }}  || echo "ok"
+  delegate_to: 127.0.0.1
+  run_once: true
+

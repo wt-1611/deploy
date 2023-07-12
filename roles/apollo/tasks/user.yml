@@ -1,0 +1,19 @@
+---
+- name: set pass
+  set_fact:
+    apo: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
+    
+  no_log: true
+    
+- name:  useradd
+  user: 
+    name: "apollo"
+    password: "{{ apo| password_hash('sha512') }}" 
+    update_password: always
+  no_log: true
+
+- name: record  pass
+  shell: |
+    echo "{{inventory_hostname}},apollo,{{ apo }}" >> {{ playbook_dir }}/out.csv
+  delegate_to: 127.0.0.1
+  no_log: true

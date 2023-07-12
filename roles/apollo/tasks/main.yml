@@ -1,0 +1,17 @@
+---
+# tasks file for apollo
+- name: get java dir
+  stat: path=/opt/apollo
+  register: adir_is
+
+- name: begin
+  block:
+    - include_tasks: user.yml
+      tags: [user]
+
+    - include_tasks: initdb.yml
+      tags: [db]
+
+    - include_tasks: install.yml
+      tags: [install]
+  when: not adir_is.stat.exists and mport is defined

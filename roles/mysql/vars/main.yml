@@ -1,0 +1,8 @@
+---
+# vars file for mysql
+
+datadir: "/data/mysql"
+datalog: "/data/mysql_restore_log"
+log: "/data/mysql_log"
+mport: 3306
+

@@ -1,0 +1,54 @@
+---
+- name: init mysql conf
+  template:
+    src: my.cnf.j2
+    dest: /etc/my.cnf
+
+- name: start mysql serice
+  service: 
+    name: mysqld
+    state: started
+    enabled: yes
+
+
+- name: set pass
+  set_fact:
+    admpass: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}@12Whc"
+    apppass: "{{ lookup('password', '/dev/null length=11 chars=ascii_letters') }}@12Whc"
+    rootpass: "{{ lookup('password', '/dev/null length=13 chars=ascii_letters') }}@12Whc"
+    replpass: "{{ lookup('password', '/dev/null length=12 chars=ascii_letters') }}@12Whc"
+
+
+
+- name: init root pass
+  shell: |
+    /opt/mysql/bin/mysqladmin   -uroot password '{{ rootpass }}'
+  no_log: false
+
+- name: record  pass
+  shell: |
+    echo "{{inventory_hostname}},sqladm,'{{ admpass }}'" >> {{ playbook_dir }}/out.csv
+    echo "{{inventory_hostname}},sqlapp,'{{ apppass }}'" >> {{ playbook_dir }}/out.csv
+    echo "{{inventory_hostname}},sql-root,'{{ rootpass }}'" >> {{ playbook_dir }}/out.csv
+    echo "{{inventory_hostname}},sql-repl,'{{ replpass }}'" >> {{ playbook_dir }}/out.csv
+  delegate_to: 127.0.0.1
+  no_log: true
+
+- name: create user
+  mysql_user:
+    login_host: localhost
+    login_port: "{{ mport }}"
+    login_user: root
+    login_unix_socket: "{{  datadir }}/mysql.sock"
+    login_password: "{{ rootpass }}"
+    name: "{{ item.user }}"
+    host: "{{ item.host }}"
+    priv: "{{ item.pr }}"
+    password: "{{ item.pass }}"
+    state: present
+    update_password: always
+  with_items:
+    - { user: sqladm, host: '%',pass: '{{ admpass }}', pr: "*.*:ALL" }
+    - { user: sqlapp, host: '%',pass: '{{ apppass }}', pr: "*.*:SELECT,INSERT,UPDATE,DELETE" }
+    - { user: repl, host: '%',pass: '{{ replpass }}', pr: "*.*:REPLICATION SLAVE" }
+  no_log: false

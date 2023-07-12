@@ -1,0 +1,23 @@
+---
+#- name:  Check if Nginx already installed
+#  shell: "ps aux | grep ngin[x] | wc -l"
+#  register: num
+#  #failed_when: num.stdout != "0"
+
+- name: check  stsweb user
+  shell: |
+    id stsweb
+  register: sta
+  ignore_errors: yes
+
+- name: begin tengine
+  block:
+    - import_tasks: user.yml
+      tags: [user]
+
+    - import_tasks: install_dep.yml
+      tags: [dep]
+
+    - import_tasks: init_conf.yml
+      tags: [conf]
+  when: sta.rc != 0

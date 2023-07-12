@@ -1,0 +1,20 @@
+---
+- name: get pk
+  get_url: 
+    url: "{{ javaurl }}/{{ rocketmq_allTar }}"
+    dest: /tmp
+
+- name: unzip  rocketmq
+  unarchive:
+   src: "/tmp/{{ rocketmq_allTar }}"
+   dest: /opt
+   owner: rocketmq
+   group: rocketmq
+   keep_newer: yes
+   copy: no
+
+- name: create soft link
+  file:
+   src: /opt/{{ rocketmq_all }}
+   path: /opt/rocketmq
+   state: link

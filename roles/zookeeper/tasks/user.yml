@@ -1,0 +1,15 @@
+---
+- name: cretate zk user
+  user:
+    name: zookeeper
+    comment: "v1 version"
+    shell: /bin/bash
+    password: "{{ zkpass| password_hash('sha512') }}"
+    update_password: always
+    state: present
+  no_log: true
+
+- name: record  pass
+  shell: |
+    echo "{{inventory_hostname}},zookeeper,{{ zkpass }}" >> {{ playbook_dir }}/out.csv
+  delegate_to: 127.0.0.1

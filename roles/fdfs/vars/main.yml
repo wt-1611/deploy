@@ -1,0 +1,8 @@
+---
+# vars file for fdfs
+tracker_server_port : "22122"
+storage_server_port : "23000"
+
+base_data: "/data/fdfs"
+storage_data_path : "/data/fdfs/storage"
+tracker_data_path : "/data/fdfs/tracker"

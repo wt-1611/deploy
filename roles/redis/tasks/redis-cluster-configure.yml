@@ -1,0 +1,41 @@
+---
+- name: redis-cluster-configure | Check if redis  already created
+  stat: path=/opt/redis6
+  register: redis_status
+
+- name: redis-cluster-configure
+  block:
+  - name: redis-cluster-configure | Apply config files /opt/redis6/conf
+    template:
+      src: redis.conf.j2
+      dest: /opt/redis6/{{ item }}.conf
+      mode: 0640
+      owner: redis
+      group: redis
+    with_items: "{{ port }}"
+
+
+  - name: redis-cluster-configure | Create redis data dir
+    file:
+      path: '{{ data }}/{{ item }}'
+      state: directory
+      owner: redis
+      mode: 0700
+    with_items: "{{ port }}"
+
+  - name: redis-cluster-configure | redis start service file
+    template:
+      src: redis.service.j2
+      dest: /usr/lib/systemd/system/redis{{ item }}.service
+    with_items: "{{ port }}"
+
+
+  - name: redis-cluster-configure | Ensures redis-server service is started and enabled
+    systemd:
+      name: redis{{ item }}
+      daemon_reload: True
+      enabled: True
+      state: restarted
+    with_items: "{{ port }}"
+  #when: 
+  #- redis_status.stat.exists == False

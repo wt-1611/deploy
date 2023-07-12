@@ -1,0 +1,20 @@
+---
+- name: set pass
+  set_fact:
+    acpass: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
+    conn_act: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
+  no_log: true
+    
+- name:  useradd
+  user: 
+    name: "activemq"
+    password: "{{ acpass| password_hash('sha512') }}" 
+    update_password: always
+  no_log: true
+
+- name: record  pass
+  shell: |
+    echo "{{inventory_hostname}},activemq,{{ acpass }}" >> {{ playbook_dir }}/out.csv
+    echo "{{inventory_hostname}},activemq_conn-gzhc365,{{ conn_act }}" >> {{ playbook_dir }}/out.csv
+  delegate_to: 127.0.0.1
+  no_log: true

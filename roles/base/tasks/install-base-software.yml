@@ -1,0 +1,77 @@
+---
+- name: install base software
+  yum:
+    name:
+    - sysstat
+    - iotop
+    - net-tools
+    - vim
+    - nc
+    - tcpdump
+    - clamav
+    - telnet
+    - unzip
+    - tar
+    - ncurses-compat-libs
+
+    state: present
+
+- name: install python module
+  yum:
+    name: ["python3-policycoreutils","python3-libselinux"]
+    state: present
+  when: ansible_distribution == "openEuler"
+- name: start service
+  systemd:
+    name: sysstat
+    daemon_reload: True
+    enabled: True
+    state: started
+  
+- name: stop service 
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: no
+  ignore_errors: yes
+
+
+
+- name: close selinux file
+  shell: |
+    setenforce  0
+    sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
+
+- name: Set sysctl file limiits
+  pam_limits:
+    dest: "{{ item.dest }}"
+    domain: '*'
+    limit_type: "{{ item.limit_type }}"
+    limit_item: "{{ item.limit_item }}"
+    value: "{{ item.value }}"
+  with_items:
+  - { dest: '/etc/security/limits.conf',limit_type: 'soft',limit_item: 'nofile', value: '655350' }
+  - { dest: '/etc/security/limits.conf',limit_type: 'hard',limit_item: 'nofile', value: '655350'}
+  - { dest: '/etc/security/limits.conf',limit_type: 'soft',limit_item: 'nproc', value: '102400' }
+  - { dest: '/etc/security/limits.conf',limit_type: 'hard',limit_item: 'nproc', value: '102400' }
+
+- name: mkdir clamav log directory
+  file:
+    path: /var/log/clamav
+    state: directory
+    mode: 0755
+
+- name: copy clamscan.sh to root 
+  copy:
+   src: clamscan.sh
+   dest: /root
+   mode: 0750
+
+- name:  cront clamav scan
+  cron:
+    name: "ido clamav scan"
+    minute: "{{ 59 |random(1,2) }}"
+    hour: "3"
+    job: "/bin/bash /root/clamscan.sh  | logger -t cron-clamscan"
+
+

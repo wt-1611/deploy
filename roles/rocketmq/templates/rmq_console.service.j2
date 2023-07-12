@@ -1,0 +1,14 @@
+[Unit]
+Description=rmq console
+After=network.target
+
+[Service]
+Type=simple
+User=rocketmq
+Group=rocketmq
+RuntimeDirectory=rocketmq
+ExecStart=/usr/local/jdk1.8.0_151/bin/java -jar  /home/rocketmq/rocketmq-dashboard-1.0.1-SNAPSHOT.jar
+ExecStop=/bin/kill -3 \$MAINPID
+
+[Install]
+WantedBy=multi-user.target

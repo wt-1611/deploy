@@ -1,0 +1,74 @@
+---
+- name: remove mariadb
+  yum:
+    name: mariadb-libs
+    state: removed
+  ignore_errors: yes
+
+- name: set pass
+  set_fact:
+    mysql1pass: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
+- name: create mysql user 
+  user: 
+    comment: "v1 version"
+    shell: /bin/bash
+    password: "{{ mysql1pass| password_hash('sha512') }}"
+    state: present
+    name: "mysql"
+- name: record  pass
+  shell: |
+    echo "{{inventory_hostname}},mysql,{{ mysql1pass }}" >> {{ playbook_dir }}/out.csv
+  delegate_to: 127.0.0.1
+
+- name: get pk
+  get_url:
+    url: "{{ url }}/{{ mysqlTar }}"
+    dest: /tmp
+- name:  unarchive tgz file
+  unarchive:
+    src: "/tmp/{{ mysqlTar }}"
+    dest: "/opt"
+    owner: mysql
+    group: mysql
+    copy: no
+- name: create soft line 
+  file: 
+    src: /opt/{{ mysql }}
+    path: /opt/mysql
+    state: link
+
+
+
+- name: begine installed mysql
+  block:
+    - name: install of  rhel7 
+      block:
+        - name: install python module  
+          yum:
+            name: MySQL-python
+            state: present
+
+      when: os == "rhel"
+    - name: install of euler22、kyline v10
+      block:
+        - name: install python module
+          yum:
+            name: python3-mysql
+            state: present
+
+      when: os == "euler" or os == "kylin"
+
+- name: copy start file
+  copy:
+    src:  /opt/mysql/support-files/mysql.server
+    dest: /etc/init.d/mysqld
+    remote_src: yes
+
+- name: add startup
+  shell: |
+    chmod +x  /etc/init.d/mysqld
+    chkconfig --add mysqld
+
+- name: add env
+  shell: |
+    echo "export PATH=$PATH:/opt/mysql/bin" > /etc/profile.d/mysql.sh

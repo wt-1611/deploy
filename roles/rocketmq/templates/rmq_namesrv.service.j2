@@ -1,0 +1,14 @@
+[Unit]
+Description=rmq mqnamesrv
+After=network.target
+
+[Service]
+Type=simple
+User=rocketmq
+Group=rocketmq
+RuntimeDirectory=rocketmq
+ExecStart=/opt/rocketmq/bin/mqnamesrv
+ExecStop=/opt/rocketmq/bin/mqshutdown namesrv
+
+[Install]
+WantedBy=multi-user.target

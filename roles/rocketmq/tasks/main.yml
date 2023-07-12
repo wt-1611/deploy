@@ -1,0 +1,23 @@
+---
+# tasks file for rocketmq
+- name: Check if rocketmq already installed
+  shell: "ps aux | grep rocketm[q] | wc -l"
+  register: num
+
+- name: begin rocketmq
+  block:
+    - include_tasks: user.yml
+      tags: [init-user]
+
+    - include_tasks: install.yml
+      tags: [install]
+
+    - include_tasks: config.yml
+      tags: [config]
+
+    - name: install dashboard
+      block:
+        - include_tasks: console.yml
+          tags: [console]
+      when:  namesrv == inventory_hostname
+  when: num.stdout == "0"

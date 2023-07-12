@@ -1,0 +1,29 @@
+---
+- name: init mysql data directory
+  file:
+    path: /data 
+    state: directory
+
+
+
+- name: init mysql binlog directory
+  file:
+    path: "{{ datalog }}"
+    state: directory
+    owner: mysql
+    group: mysql
+
+- name: init mysql log directory
+  file:
+    path: "{{ log }}"
+    state: directory
+    owner: mysql
+    group: mysql
+
+- name: init log file
+  shell: |
+    su - mysql -c "echo > {{ log }}/mysql.log"
+
+- name: create data dir
+  shell: |
+    /opt/mysql/bin/mysqld --initialize-insecure  --user=mysql --basedir=/opt/mysql --datadir={{ datadir }}

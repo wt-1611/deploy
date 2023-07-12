@@ -1,0 +1,16 @@
+- hosts: apollo
+  gather_facts: no
+  tasks:
+    - name: init db 
+      mysql_db:
+        login_unix_socket:  "/data/mysql/mysql.sock"
+        login_password: "gcBwZHSaSdbVYIO@12Whc"
+        login_port: "3306"
+        login_user: sqladm
+        login_host: "192.168.10.220"
+        encoding: utf8
+        target: /tmp/apolloconfigdb.sql
+        state: import
+        name: apolloconfigdb
+
+   

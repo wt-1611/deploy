@@ -1,0 +1,58 @@
+---
+- hosts: check 
+  gather_facts: no
+  tasks:
+    - name: Create a new primary partition for "/dev/vdb"
+      parted:
+        device: "/dev/vdb"
+        number: 1
+        state: present
+        label: gpt
+ 
+    - name: Create a volume group on "/dev/vdb"
+      lvg:
+        vg: "data"
+        pvs: "/dev/vdb1"
+ 
+    - name: Create a logical volume
+      shell: |
+        lvcreate -l +100%FREE -n mdata data
+
+    - name: Create a xfs filesystem on logical volume "mdata"
+      filesystem:
+        fstype: "xfs"
+        dev: /dev/data/mdata
+
+    - name: Create "mount point" and "mount logical volume"
+      block:
+        - name: Create "mount point"
+          file: 
+            path: "/data"
+            state: directory
+        - name: mount logical volume
+          mount:
+            path: "/data"
+            src: /dev/data/mdata
+            fstype: "xfs"
+            opts: defaults 
+            state: present 
+         
+      when: data is defined
+    - name: Create "mount point" and "mount logical volume"
+      block:
+        - name: Create "mount point"
+          file:
+            path: "/log"
+            state: directory
+        - name: mount logical volume
+          mount:
+            path: "/log"
+            src: /dev/data/mdata
+            fstype: "xfs"
+            opts: defaults
+            state: present
+
+      when: log is defined
+    - name: local mount table
+      shell: mount -a
+ 

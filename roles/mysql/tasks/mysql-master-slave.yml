@@ -1,0 +1,103 @@
+---
+- name: set master
+  block:
+  - name: master status
+    mysql_replication: 
+      login_host: localhost
+      login_port: "{{ mport }}"
+      login_user: root
+      login_password: "{{ rootpass }}"
+      login_unix_socket: "{{  datadir }}/mysql.sock"
+      mode: getmaster
+    register: repl_master_status
+
+  - name: rec hostname,pass
+    shell: |
+      echo "{{ inventory_hostname }}" > a
+      echo "{{ replpass }}" > b
+      echo "{{ repl_master_status.File }}" >> c
+      echo "{{ repl_master_status.Position }}" >> d
+    delegate_to: 127.0.0.1
+
+
+  when: master is defined
+  no_log: true
+
+- name: begin Master-slave synchronization
+  block:
+
+  - name: set masterip env
+    shell: |
+      cat a
+    delegate_to: 127.0.0.1
+    register: master_ip
+  
+  - name: set masterport env
+    shell: |
+      cat b
+    delegate_to: 127.0.0.1
+    register: master_pass
+
+  - name: set binlogfile env
+    shell: |
+      cat c
+    delegate_to: 127.0.0.1
+    register: master_binlog
+
+  - name: set pospoint env
+    shell: |
+      cat d
+    delegate_to: 127.0.0.1
+    register: master_pos
+
+  - name: clean 
+    shell: | 
+      rm -fr a b c d
+    delegate_to: 127.0.0.1
+
+  - name: change_slave_to_master
+    mysql_replication:
+      login_host: localhost
+      login_port: "{{ mport }}"
+      login_user: root
+      login_password: "{{ rootpass }}"
+      login_unix_socket: "{{  datadir }}/mysql.sock"
+      master_host: "{{ master_ip.stdout }}"
+      master_user: "repl"
+      master_password: "{{ master_pass.stdout }}"
+      master_port: "{{ mport |int }}"
+      master_log_file: "{{ master_binlog.stdout }}"
+      master_log_pos: "{{ master_pos.stdout }}"
+      mode: changemaster
+
+  - name: start_slave
+    mysql_replication:
+      login_user: root
+      login_host: localhost
+      login_port: "{{ mport }}"
+      login_password: "{{ rootpass }}"
+      login_unix_socket: "{{  datadir }}/mysql.sock"
+      mode: startslave
+  
+  - name: get_slave_status
+    mysql_replication:
+      login_user: root
+      login_host: localhost
+      login_port: "{{ mport }}"
+      login_password: "{{ rootpass }}"
+      login_unix_socket: "{{  datadir }}/mysql.sock"
+      mode: getslave
+    register: info    
+  
+  - name: dispaly_slave
+    debug:
+      msg: "Slave_IO_Running={{ info.Slave_IO_Running }} Slave_SQL_Running={{ info.Slave_SQL_Running }}"
+
+  when: slave is defined
+  no_log: true
+
+
+
+
+
+

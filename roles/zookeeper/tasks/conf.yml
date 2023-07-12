@@ -1,0 +1,40 @@
+---
+- name: config file
+  template:
+    src: zoo.cfg.j2
+    dest: /opt/zookeeper/conf/zoo.cfg
+    owner: zookeeper
+    group: zookeeper
+
+- name: create data dir
+  file:
+    path: /var/lib/zookeeper/data
+    owner: zookeeper
+    group: zookeeper
+    state: directory
+    recurse: yes
+
+- name: create log file
+  file:
+    path: /var/log/zookeeper
+    owner: zookeeper
+    group: zookeeper
+    state: directory
+
+- name: member id
+  template:
+    src: myid.j2
+    dest: /var/lib/zookeeper/data/myid
+    owner: zookeeper
+    group: zookeeper
+
+- name: log env
+  shell: |
+    sed -i '3i ZOO_LOG_DIR=/var/log/zookeeper' /opt/zookeeper/bin/zkServer.sh 
+
+- name: start serive
+  systemd:
+    name: zookeeper
+    daemon_reload: True
+    enabled: True
+    state: started

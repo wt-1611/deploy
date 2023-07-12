@@ -1,0 +1,17 @@
+---
+# tasks file for activemq
+- name: Check if fdfs already installed
+  shell: "ps aux | grep activ[e]  | wc -l"
+  register: acnum
+
+- name: begin activemq
+  block: 
+    - include_tasks: user.yml
+      tags: [user]
+    
+    - include_tasks: install.yml
+      tags: [install]
+    
+    - include_tasks: config.yml
+      tags: [config]
+  when: acnum.stdout == "0"

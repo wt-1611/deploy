@@ -1,0 +1,18 @@
+---
+# tasks file for fdfs
+- name: Check if fdfs already installed
+  shell: "ps aux | grep tracke[r] | wc -l"
+  register: num
+
+
+- name: begin fdfs
+  block:
+  - include_tasks: install.yaml
+    tags: [install]
+  
+  - include_tasks: conf.yaml
+    tags: [conf]
+  
+  - include_tasks: start.yaml
+    tags: [start]
+  when: num.stdout == "0"

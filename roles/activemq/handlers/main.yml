@@ -1,0 +1,8 @@
+---
+# handlers file for activemq
+- name: start activemq
+  service:
+    name: activemq
+    state: started
+    enabled: yes
+    daemon_reload: yes

@@ -1,0 +1,121 @@
+---
+- name:  create config directory
+  file:
+    path: /opt/rocketmq/conf/dledger-hc
+    state: directory
+    owner: rocketmq
+    group: rocketmq
+
+
+- name: check nodes number
+  block:
+    - name: set cpu
+      shell: |
+        cat /proc/cpuinfo | grep processor | wc -l
+      register: cpu
+
+    - name: install num 1 cluster
+      block:
+        - name: defined flag
+          set_fact:
+            foo: "sure"
+        - name: defined1 flag
+          set_fact:
+            dLedger_single: "n0-{{ play_hosts[0] }}:40911;n1-{{ play_hosts[0] }}:40916;n2-{{ play_hosts[0] }}:40921"
+
+          
+        - name: init config
+          template:
+            src: broker.properties.j2
+            dest: /opt/rocketmq/conf/dledger-hc/{{ item }}.properties
+          with_items: [n0,n1,n2]
+
+        - name:  create config directory
+          file:
+            path: /home/rocketmq/raft{{ item }}-store/commitlog
+            state: directory
+            owner: rocketmq
+            group: rocketmq
+            recurse: yes
+          with_items: [n0,n1,n2]
+
+        - name: modify brocker mem
+          shell: |
+            sed -i 's/-Xms[1-9]g -Xmx[1-9]g -Xmn[1-9]g/-Xms{{ mem }}g -Xmx{{ mem }}g -Xmn{{ mem|int //2 }}g/g' /opt/rocketmq/bin/runbroker.sh
+          when: mem is defined
+
+        
+        - name: cpoy start file
+          copy:
+            dest: /opt/rocketmq/
+            src: start.sh
+            mode: 0700
+            owner: rocketmq
+        
+        - name: start service
+          shell: |
+            /bin/bash /opt/rocketmq/start.sh
+
+      when: play_hosts|length == 1 
+
+
+
+    - name: install num 3 cluster
+      block:
+        - name: append dLedgerPerrs
+          set_fact:
+            dLedger: "n0-{{ play_hosts[0] }}:40911;n1-{{ play_hosts[1] }}:40911;n2-{{ play_hosts[2] }}:40911"
+
+        - name: echo
+          debug:
+            msg: "{{ dLedger }}"
+
+        - name: init  config
+          template:
+            src: broker.properties.j2
+            dest: /opt/rocketmq/conf/dledger-hc/broker.properties
+
+        - name:  create config directory
+          file:
+            path: /home/rocketmq/raft-store/commitlog
+            state: directory
+            owner: rocketmq
+            group: rocketmq
+            recurse: yes
+        
+        - name: start file broker
+          template:
+            src: rmq_broker.service.j2
+            dest: /usr/lib/systemd/system/rmq_broker.service
+
+        - name: start namesrv
+          block:
+            - name: start file namesrv
+              template:
+                src: rmq_namesrv.service.j2
+                dest: /usr/lib/systemd/system/rmq_namesrv.service
+            
+            - name: start namesrv service 
+              service: 
+                name: rmq_namesrv
+                state: started
+                enabled: yes
+                daemon_reload: yes
+          run_once: true
+          delegate_to: "{{ namesrv }}"
+        
+        - name: modify brocker mem
+          shell: |
+            sed -i 's/-Xms[1-9]g -Xmx[1-9]g -Xmn[1-9]g/-Xms{{ mem }}g -Xmx{{ mem }}g -Xmn{{ mem|int //2 }}g/g' /opt/rocketmq/bin/runbroker.sh
+          when: mem is defined
+
+        - name: start brocker service 
+          service: 
+            name: rmq_broker
+            state: started
+            enabled: yes
+            daemon_reload: yes
+
+      when: play_hosts|length == 3
+
+  when: play_hosts|length == 1 or play_hosts|length == 3

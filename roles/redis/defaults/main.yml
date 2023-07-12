@@ -1,0 +1,10 @@
+---
+# defaults file for redis
+pass: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
+
+#数据目录地址
+data: "/home/redis"
+#设置为true会跳过“disable-transparent-huge-pages”服务
+unprivileged_container: false
+
+

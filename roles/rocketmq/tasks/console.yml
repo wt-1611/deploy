@@ -1,0 +1,70 @@
+---
+- name: get pk
+  get_url:
+    url: "{{ javaurl }}/{{ rocketmq_dash }}"
+    dest: /tmp
+
+- name: copy console-file
+  copy: 
+   src: "/tmp/{{ rocketmq_dash }}"
+   dest: /home/rocketmq
+   owner: rocketmq
+   group: rocketmq
+   remote_src: yes
+
+- name: set pass
+  set_fact:
+    adm: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
+    user: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
+  
+
+
+- name: record  pass
+  shell: |
+    echo "{{inventory_hostname}},rocketmq-dashboard-admin,{{ adm }}" >> {{ playbook_dir }}/out.csv
+    echo "{{inventory_hostname}},rocketmq-dashboard-alex,{{ user }}" >> {{ playbook_dir }}/out.csv
+  delegate_to: 127.0.0.1
+
+- name: create data dir
+  file:
+   path: /home/rocketmq/rocker-dashboard
+   state: directory
+   owner: rocketmq
+   group: rocketmq
+
+- name: copy  logback.xml
+  copy:
+    src: "logback.xml"
+    dest: /home/rocketmq/rocker-dashboard
+    owner: rocketmq
+    group: rocketmq
+
+- name: copy application.yml
+  template:
+    src: application.yml.j2
+    dest: /home/rocketmq/rocker-dashboard/application.yml
+    owner: rocketmq
+
+- name: copy role-permission.yml
+  template:
+    src: role-permission.yml.j2
+    dest: /home/rocketmq/rocker-dashboard/role-permission.yml
+    owner: rocketmq
+
+- name: copy users.properties
+  template:
+    src: users.properties.j2
+    dest: /home/rocketmq/rocker-dashboard/users.properties
+    owner: rocketmq
+
+- name: init rmq_console config
+  template:
+   src: rmq_console.service.j2
+   dest: /usr/lib/systemd/system/rmq_console.service
+
+- name: start rmq_console
+  service: 
+    name: rmq_console.service
+    state: started
+    enabled: yes
+    daemon_reload: yes

@@ -1,0 +1,34 @@
+---
+- name: copy sqldb
+  copy:
+    src: apolloconfigdb.sql
+    dest: /tmp
+- name: copy sqldb
+  copy:
+    src: apolloportaldb.sql
+    dest: /tmp
+
+  
+- name: init db 
+  mysql_db:
+    login_unix_socket:  "{{  datadir }}/mysql.sock"
+    login_password: "{{ admpass }}"
+    login_port: "{{ mport }}"
+    login_user: sqladm
+    login_host: "{{ inventory_hostname }}"
+    encoding: utf8
+    target: /tmp/apolloconfigdb.sql
+    state: import
+    name: apolloconfigdb
+
+- name: init db 
+  mysql_db:
+    login_unix_socket:  "{{  datadir }}/mysql.sock"
+    login_password: "{{ admpass }}"
+    login_port: "{{ mport }}"
+    login_user: sqladm
+    login_host: "{{ inventory_hostname }}"
+    encoding: utf8
+    target: /tmp/apolloportaldb.sql
+    state: import
+    name: apolloportaldb

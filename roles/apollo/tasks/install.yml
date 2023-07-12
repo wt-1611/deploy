@@ -1,0 +1,64 @@
+---
+
+- name: get pk
+  get_url:
+    url: "{{ javaurl }}/{{ adminTar }}"
+    dest: /tmp
+
+- name: get pk
+  get_url:
+    url: "{{ javaurl }}/{{ configTar }}"
+    dest: /tmp
+
+- name: get pk
+  get_url:
+    url: "{{ javaurl }}/{{ portalTar }}"
+    dest: /tmp
+
+- name: create file dir
+  shell: |
+    mkdir -p  /opt/apollo/{admin,config,portal} && chown -R apollo. /opt/apollo
+
+- name: unzip  tar
+  unarchive:
+   src: "/tmp/{{ adminTar }}"
+   dest: /opt/apollo/admin
+   owner: apollo
+   group: apollo
+   copy: no
+
+- name: unzip  tar
+  unarchive:
+   src: "/tmp/{{ configTar }}"
+   dest: /opt/apollo/config
+   owner: apollo
+   group: apollo
+   copy: no
+
+
+- name: unzip  tar
+  unarchive:
+   src: "/tmp/{{ portalTar }}"
+   dest: /opt/apollo/portal
+   owner: apollo
+   group: apollo
+   copy: no
+
+- name: config apollo
+  template:
+    src: application-github.properties.j2
+    dest: /opt/apollo/{{ item }}/config/application-github.properties
+    owner: apollo
+    group: apollo
+  with_items:
+    - "config"
+    - "admin"
+
+
+- name: config portal 
+  template:
+    src: application-github.properties1.j2
+    dest: /opt/apollo/portal/config/application-github.properties
+    owner: apollo
+    group: apollo
+

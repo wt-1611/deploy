@@ -1,0 +1,73 @@
+---
+- name: redis-cluster-create-cluster | Create redis cluster
+  block:
+    - name:  redis-cluster-create-cluster | Create 3 node cluster
+      block:
+      - name: redis-cluster-create-cluster | Set redis_cluster_master_ip_address_list
+        set_fact:
+          redis_cluster_master_ip_address_list: "{{ groups['redis']| map('regex_replace','$',':7000')| list}}" #"{{ groups['redis']| map('regex_replace','(.*)','\\1:7000')| list}}"
+              
+      
+      - name: echo
+        debug:
+          msg: "{{ redis_cluster_master_ip_address_list}}"
+
+      - name: redis-cluster-create-cluster | Create redis cluster master reloe via redis-cli
+        shell: |
+          /usr/bin/printf 'yes' | /opt/redis6/bin/redis-cli -p 7000 -a '{{ conn_pass }}' --cluster create {{ redis_cluster_master_ip_address_list |join(' ') }} 
+        delegate_to: "{{ groups['redis'][0] }}"
+        run_once: true
+        #no_log: true
+
+      - name: redis-cluster-create-cluster | sha1id
+        shell: |
+          /opt/redis6/bin/redis-cli -p 7000 -a '{{ conn_pass }}' cluster nodes | grep {{ groups['redis'][1] }}|grep -v slave | awk '{print $1}'
+        register: sha1id
+        run_once: true
+        no_log: true
+
+      - name: redis-cluster-create-cluster | sha2id
+        shell: |
+          /opt/redis6/bin/redis-cli -p 7000 -a '{{ conn_pass }}' cluster nodes | grep {{ groups['redis'][2] }}|grep -v slave | awk '{print $1}'
+        run_once: true
+        register: sha2id
+        no_log: true
+
+      - name: redis-cluster-create-cluster |sha0id
+        shell: |
+          /opt/redis6/bin/redis-cli -p 7000 -a '{{ conn_pass }}' cluster nodes | grep {{ groups['redis'][0] }}|grep -v slave | awk '{print $1}'
+        run_once: true
+        register: sha0id
+        no_log: true
+
+      - name:  redis-cluster-create-cluster | Create redis cluster slave reloe via redis-cli
+        shell: |
+          /opt/redis6/bin/redis-cli -p 7000 -a "{{ conn_pass }}"  --cluster add-node {{ groups['redis'][0] }}:7001 {{ groups['redis'][1] }}:7000 --cluster-slave {{ sha1id.stdout }}
+          /opt/redis6/bin/redis-cli -p 7000 -a "{{ conn_pass }}" --cluster add-node {{ groups['redis'][1] }}:7001 {{ groups['redis'][2] }}:7000 --cluster-slave {{ sha2id.stdout }} 
+          /opt/redis6/bin/redis-cli -p 7000 -a "{{ conn_pass }}" --cluster add-node {{ groups['redis'][2] }}:7001 {{ groups['redis'][0] }}:7000 --cluster-slave {{ sha0id.stdout }} 
+        run_once: true
+        delegate_to: "{{ groups['redis'][0] }}"
+        no_log: true
+      
+      when: redis_num == "3"
+
+    - name: redis-cluster-create-cluster | Create  cluster
+      block: 
+      - name: redis-cluster-create-cluster | Create 6 node cluster
+        set_fact:
+          redis_cluster_ip_address_list:  "{{ groups['redis']| map('regex_replace','$',':7000')| list}}"  #"{{ groups['redis']| map('regex_replace','(.*)','\\1:7000')| list }}"
+        when: redis_num == "6"
+        
+
+      - name: redis-cluster-create-cluster | Create 1 node cluster
+        set_fact:
+          redis_cluster_ip_address_list: "{{ port | map('regex_replace','^','127.0.0.1:') | list }}"
+        when: redis_num == "1"
+
+      - name: redis-cluster-create-cluster | Create redis cluster via redis-cli
+        shell: |
+          /usr/bin/printf 'yes' | /opt/redis6/bin/redis-cli -p 7000 -a '{{ conn_pass }}' --cluster create {{ redis_cluster_ip_address_list |join(' ') }} --cluster-replicas 1
+        run_once: true
+        delegate_to: "{{ groups['redis'][0] }}"
+      when: redis_num == "1" or redis_num == "6"
+      no_log: true

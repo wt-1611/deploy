@@ -1,0 +1,43 @@
+- name: init storage dir
+  file:
+    name: "{{storage_data_path}}/data"
+    owner: fdfs
+    group: fdfs
+    state: directory
+    recurse: yes
+
+- name: init tracker dir
+  file:
+    name: "{{tracker_data_path}}/data"
+    owner: fdfs
+    group: fdfs
+    state: directory
+    recurse: yes
+
+- name: clear env
+  shell: | 
+    rm -fr  /etc/fdfs/*
+    
+
+
+- name: init client config
+  template:
+   src: client.conf.j2
+   dest: /etc/fdfs/client.conf
+   owner: fdfs
+   group: fdfs
+
+- name: init tracker config
+  template:
+   src: tracker.conf.j2
+   dest: /etc/fdfs/tracker.conf
+   owner: fdfs
+   group: fdfs
+
+- name: init storage config
+  template:
+   src: storage.conf.j2
+   dest: /etc/fdfs/storage.conf
+   owner: fdfs
+   group: fdfs
+

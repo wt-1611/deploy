@@ -1,0 +1,27 @@
+---
+- name: get pk
+  get_url:
+    url: "{{ javaurl }}/{{ zookeeperTar }}"
+    dest: /tmp
+- name: tar zookeeper
+  unarchive:
+    src: "/tmp/{{ zookeeperTar }}"
+    dest: /opt/
+    group: zookeeper 
+    owner: zookeeper 
+    keep_newer: yes
+    copy: no
+- name:  create softlink
+  file: 
+    src: /opt/{{ zookeeper }}
+    path: /opt/zookeeper
+    state: link
+- name: conf env
+  copy: 
+    src: zk.sh
+    dest: /etc/profile.d/
+- name: start service file
+  template:
+    src: zookeeper.service.j2
+    dest: /usr/lib/systemd/system/zookeeper.service
+    

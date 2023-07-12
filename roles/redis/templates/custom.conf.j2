@@ -1,0 +1,7 @@
+; {{ ansible_managed }}
+; /usr/lib/systemd/system/redis.service.d/custom.conf
+[Service]
+LimitFSIZE = infinity
+LimitNOFILE = 2000000
+LimitAS = infinity
+LimitCPU = infinity

@@ -1,0 +1,4 @@
+---
+# vars file for zookeeper
+c: 0
+zkpass: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"

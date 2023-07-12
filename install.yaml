@@ -1,0 +1,67 @@
+---
+- hosts: all
+  gather_facts: yes
+  roles:
+  - base
+
+- hosts: jdk
+  gather_facts: no
+  roles:
+  - jdk
+
+- hosts: mvn
+  gather_facts: no
+  roles:
+  - mvn
+
+
+- hosts: redis
+  gather_facts: no
+  roles:
+  - redis
+
+- hosts: tengine
+  gather_facts: no
+  roles:
+  - tengine
+
+- hosts: app
+  gather_facts: no
+  roles:
+  - app
+
+- hosts: mysql
+  gather_facts: no
+  vars:
+  #- mode: "single" #"cluster" #slave/master
+  roles:
+  - mysql
+
+- hosts: rocketmq
+  gather_facts: no
+  vars:
+  #- namesrv: "192.168.10.212" #namesrv地址
+  - mem: "2" #brocker内存大小,必须大于或等于2GB
+  roles:
+  - rocketmq
+
+- hosts: activemq
+  gather_facts: no
+  roles:
+  - activemq
+
+- hosts: zookeeper
+  gather_facts: no
+  roles:
+  - zookeeper
+
+- hosts: fdfs
+  gather_facts: no
+  roles:
+  - fdfs
+
+
+- hosts: apollo
+  gather_facts: no
+  roles:
+  - apollo

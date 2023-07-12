@@ -1,0 +1,100 @@
+---
+- name: get pk
+  get_url:
+    url: "{{ url }}/{{ xtrabackupTar }}"
+    dest: /tmp
+
+
+
+- name: unzip  tar
+  unarchive:
+    src: "/tmp/{{ xtrabackupTar }}"
+    dest: /opt
+    owner: mysql
+    group: mysql
+    keep_newer: yes
+    copy: no
+
+- name: create soft link
+  file:
+    src: /opt/{{ xtrabackup }}
+    path: /root/xtrbackup
+    state: link
+
+
+
+- name: cp backup script to mysql node
+  template:
+    src: backup.sh.j2
+    dest: /root/backup.sh
+
+- name: cp backup script to mysql node
+  template:
+    src: backup.sh.j2
+    dest: /root/backup_{{ inventory_hostname }}.sh
+  run_once: true
+  delegate_to: localhost
+
+- name: ssh trust
+  shell: |
+    echo > /tmp/flag
+    mkdir -p  /root/.ssh/
+    [ -f /root/.ssh/id_rsa ] && rm -f /root/.ssh/id_rsa*
+    ssh-keygen  -t rsa  -P "" -f /root/.ssh/id_rsa
+    ssh-keyscan -p {{ ansible_ssh_port }} {{ lip }} >> /root/.ssh/known_hosts
+    cat /root/.ssh/id_rsa.pub
+  register: pub
+
+
+
+- name: local ssh pub key
+  shell: |
+    mkdir -p /root/.ssh/
+    echo "{{ pub.stdout }}" >> /root/.ssh/authorized_keys
+  delegate_to: localhost
+
+- name: get backup tar
+  get_url:
+    url: "{{ url }}/{{ xtrabackupTar }}"
+    dest: /tmp
+  run_once: true
+  delegate_to: localhost
+
+- name: unzip  tar
+  unarchive:
+    src: "/tmp/{{ xtrabackupTar }}"
+    dest: /opt
+    keep_newer: yes
+    copy: no
+  run_once: true
+  delegate_to: localhost
+- name: create soft link
+  file:
+    src: /opt/{{ xtrabackup }}
+    path: /root/xtrbackup
+    state: link
+  run_once: true
+  delegate_to: localhost
+  
+
+
+- name: crontab to mysql backup
+  cron:
+    name: backup mysqld
+    hour: "*/1"
+    minute: "0"
+    job: "/bin/bash /root/backup.sh backup"
+    state: present
+    user: root
+
+- name: Start pre-recovery from mysql backup
+  cron:
+    name: pre-recovery for mysqld backup {{inventory_hostname }}
+    hour: "*/2"
+    minute: "0"
+    job: "/bin/bash /root/backup_{{inventory_hostname }}.sh restore"
+    state: present
+    user: root
+  run_once: true
+  delegate_to: localhost
+

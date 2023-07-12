@@ -1,0 +1,60 @@
+---
+- name: set pass
+  set_fact:
+    fdfspass: "{{ lookup('password', '/dev/null length=15 chars=ascii_letters') }}"
+
+- name:  useradd
+  user: 
+    comment: "v1 version"
+    shell: /bin/bash
+    password: "{{ fdfspass| password_hash('sha512') }}"
+    update_password: always
+    state: present
+    name: "fdfs"
+
+- name: record  pass
+  shell: |
+    echo "{{inventory_hostname}},fdfs,{{ fdfspass }}" >> {{ playbook_dir }}/out.csv
+  delegate_to: 127.0.0.1
+
+- name: begins  fdfs install
+  block:
+    - name: begin kylin of install fdfs
+      block:
+        - name: get pk
+          get_url:
+            url: "{{ url }}/{{ fdfsTar }}"
+            dest: /tmp
+        - name: unzip tar
+          unarchive:
+            src: "/tmp{{ fdfsTar }}"
+            dest: /opt
+            owner: fdfs
+            group: fdfs
+            copy: no
+        - name: create soft link
+          file:
+            src: /opt/{{ fdfs  }}/etc/fdfs
+            path: /etc/fdfs
+            state: link
+        - name: copy start file
+          shell: | 
+            cp /opt/{{ fdfsversion }}/etc/init.d/* /etc/init.d
+            chmod +x /etc/init.d/fdfs_storaged
+            chmod +x /etc/init.d/fdfs_trackerd
+            chkconfig  --add fdfs_trackerd
+            chkconfig  --add fdfs_storaged
+            ln -snf /opt/fdfs/usr/bin/fdfs_storaged /usr/bin/fdfs_storaged
+            ln -snf /opt/fdfs/usr/bin/fdfs_trackerd /usr/bin/fdfs_trackerd
+            ln -snf /opt/fdfs/usr/lib64/libfastcommon.so /usr/lib64/libfastcommon.so
+            ln -snf /usr/lib64/libfastcommon.so /usr/lib/libfastcommon.so 
+      when: os == "kylin" and arch == "aarch64"
+    - name: begins 
+      block: 
+        - name: installed
+          yum: 
+            name: 
+            - fastdfs-server
+            - libfastcommon
+            state: present
+      when:  arch == "x86_64"

@@ -1,0 +1,32 @@
+---
+# tasks file for mvn
+- name: get java dir
+  stat: path=/usr/local/{{ maven }}
+  register: mdir_is
+
+- name: check 
+  block: 
+    - name: get pk
+      get_url:
+        url: "{{ javaurl }}/{{ mavenTar }}"
+        dest: /tmp
+
+    - name: unarchive tgz file
+      unarchive:
+        src: "/tmp/{{ mavenTar }}"
+        dest: /usr/local
+        keep_newer: yes
+        copy: no
+
+    - name: create soft link
+      file:
+       src: /usr/local/{{ maven }}
+       path: /usr/local/mvn
+       state: link
+
+
+    - name: set env
+      copy:
+        src: "mvn.sh"
+        dest: /etc/profile.d/
+  when: not mdir_is.stat.exists

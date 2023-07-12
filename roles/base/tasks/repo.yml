@@ -1,0 +1,18 @@
+---
+
+- name: remove old repo
+  shell: |
+    rm -fr /etc/yum.repos.d/bak
+    mkdir -p /etc/yum.repos.d/bak
+    mv /etc/yum.repos.d/*.repo /etc/yum.repos.d/bak
+  ignore_errors: yes
+
+- name: http repo
+  yum_repository:
+    file: hc
+    name: hc
+    baseurl: http://{{ lip }}:10000/package/$basearch/{{ os }}/
+    enabled: yes
+    gpgcheck: no
+    description: "hc net repo"
+    state: present

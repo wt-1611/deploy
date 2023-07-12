@@ -1,0 +1,33 @@
+---
+# tasks file for jdk
+- name: get java dir
+  stat: path=/usr/local/{{ jdk }}
+  register: dir_is
+
+
+- name: check
+  block: 
+
+    - name: get pk
+      get_url:
+        url: "{{ url }}/{{ jdkTar }}"
+        dest: /tmp
+
+    - name: unarchive tgz file
+      unarchive:
+        src: "/tmp/{{ jdkTar }}"
+        dest: /usr/local
+        keep_newer: yes
+        copy: no
+
+    - name: soft link
+      file:
+        src: /usr/local/{{ jdk }}
+        path: /usr/local/jdk
+        state: link
+
+    - name: set env
+      template:
+        src: "jdk.sh.j2"
+        dest: /etc/profile.d/jdk.sh
+  when: not dir_is.stat.exists   

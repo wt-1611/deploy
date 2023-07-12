@@ -1,0 +1,10 @@
+---  
+
+- name: init rmq_console config
+  template:
+   src: activemq.xml.j2
+   dest: /opt/activemq/conf/activemq.xml
+   owner: activemq
+   group: activemq
+  notify: start activemq
+

@@ -1,0 +1,67 @@
+#所属集群名字
+brokerClusterName=rocketmq-cluster
+#broker名字
+brokerName=RaftNode
+#Broker 对外服务的监听端口
+listenPort=30911
+
+#nameServer地址，分号分割
+namesrvAddr={{ namesrv }}:9876
+
+
+
+#### Dledger 配置
+#是否启动 DLedger
+enableDLegerCommitLog=true
+#DLedger Raft Group 的名字，建议和 brokerName 保持一致	
+dLegerGroup=HcRaft
+#DLedger Group 内各节点的地址与端口信息（同一个 Group 内的各个节点配置必须要保证一致)
+{% if foo is defined %}
+dLegerPeers={{ dLedger_single }}
+dLegerSelfId={{ item }}
+#Broker 存储目录
+storePathRootDir=/home/rocketmq/raft{{ item }}-store
+#Commitlog 存储目录
+storePathCommitLog=/home/rocketmq/raft{{ item }}-store/commitlog
+{% else %}
+dLegerPeers={{  dLedger }}
+
+    #节点 id, 必须属于 dLegerPeers 中的一个；同 Group 内各个节点要唯一
+    {% if play_hosts[0] == inventory_hostname  %}
+    dLegerSelfId=n0
+
+    {% elif play_hosts[1] == inventory_hostname  %}
+    dLegerSelfId=n1
+    {% elif play_hosts[2] == inventory_hostname  %}
+    dLegerSelfId=n2
+    {% endif %}
+storePathRootDir=/home/rocketmq/raft-store
+#Commitlog 存储目录
+storePathCommitLog=/home/rocketmq/raft-store/commitlog
+
+{% endif %}
+
+
+
+
+#发送消息线程个数（建议配置成 CPU 核数）
+sendMessageThreadPoolNums={{ cpu.stdout }}
+
+
+#是否允许 Broker 自动创建Topic，建议线下开启，线上关闭
+autoCreateTopicEnable=false
+#是否允许 Broker 自动创建订阅组，建议线下开启，线上关闭
+autoCreateSubscriptionGroup=flase
+#删除文件时间点，默认凌晨 4点
+deleteWhen=04
+#文件保留时间，默认 48 小时
+fileReservedTime=48
+#commitLog每个文件的大小默认1G
+mapedFileSizeCommitLog=1073741824
+#messageDelayLevel=1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h
+#描述了各级别与延时时间的对应映射关系。
+#     这个配置项配置了从1级开始各级延时的时间，如1表示延时1s，2表示延时5s，14表示延时10m，可以修改这个指定级别的延时时间； 
+#     时间单位支持：s、m、h、d，分别表示秒、分、时、天； 
+#     默认值就是上面声明的，可手工调整； 
+#     默认值已经够用，不建议调整【仅供参考，还是根据实际需要调整。调整默认值时注意同时要修改时间对应的level级别的值】
+messageDelayLevel=1s 5s 10s 30s 1m 2m 3m 4m 5m 6m 7m 8m 9m 10m 20m 30m 1h 2h 3h 4h 5h 6h 7h 8h 9h 10h 11h 12h

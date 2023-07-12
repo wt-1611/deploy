@@ -1,0 +1,14 @@
+[Unit]
+Description=rmq mqbroker
+After=network.target
+
+[Service]
+Type=simple
+User=rocketmq
+Group=rocketmq
+RuntimeDirectory=rocketmq
+ExecStart=/opt/rocketmq/bin/mqbroker -c "/opt/rocketmq/conf/dledger-hc/broker.properties"
+ExecStop=/opt/rocketmq/bin/mqshutdown broker
+
+[Install]
+WantedBy=multi-user.target
