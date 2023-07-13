@@ -10,7 +10,7 @@ remote='{{ lip }}'
 remote_dir=/root/.restore_{{ inventory_hostname }}
 port={{ ansible_ssh_port }}
 
-
+source /etc/profile
 mkdir -p $backdir
 mkdir -p $remote_dir
 

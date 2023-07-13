@@ -80,9 +80,10 @@ function config(){
         echo
     elif [ -f /bin/python3 ];then
         echo 'ansible_python_interpreter: "/bin/python3"' >>config.yaml
+        yum install python3-libselinux python3-policycoreutils -y
         echo
     fi
-    yum install ansible -y
+    yum install ansible  -y
     echo "javaurl: http://{{ lip }}:10000/package/java" >> config.yaml
     echo "url: http://{{ lip }}:10000/package/$(arch)/tar" >> config.yaml
     echo "os: $os" >> config.yaml
@@ -170,6 +171,7 @@ EOF
 
 function end(){
     kill -9 $(ps aux | grep  we[b] |grep -v grep | awk '{print $2}')
+    rm -f config.yaml  nohup.out
 }
 
 
