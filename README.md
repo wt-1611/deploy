@@ -24,7 +24,7 @@ redis6_x86.tar.gz
 ```
 ```bash
 # in package/x86_64/<euler> or <rhel>
-$ repotrack sysstat iotop net-tools vim nc tcpdump clamav telnet unzip tar ncurses-compat-libs
+$ repotrack sysstat iotop net-tools vim nc tcpdump clamav telnet unzip tar ncurses-compat-libs nginx
 #euler selinux
 $ repotrock python3-policycoreutils python3-libselinux
 #rhel7
