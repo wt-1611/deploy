@@ -44,3 +44,6 @@ $ vim config
 ```bash
 $ bash begin.sh
 ```
+## note
+1. app判断逻辑，支持多用户
+2. apollo启动
