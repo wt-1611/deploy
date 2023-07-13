@@ -47,5 +47,5 @@
 
 [all:vars]
 ansible_ssh_port=22
-ansible_ssh_pass=Haici_0221
+ansible_ssh_pass=<pass>
 ansible_ssh_user=root

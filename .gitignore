@@ -1,3 +1,4 @@
 package/java/*
 package/x86_64/euler/*
 package/x86_64/tar/*
+roles/app
