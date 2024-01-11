@@ -1,0 +1,51 @@
+- hosts: cert
+  gather_facts: False
+  tasks:
+    - name: create cert
+      shell: |
+        mkdir -p /root/Kkey/ && \
+        openssl genrsa -out /root/Kkey/kubelet.key 2048 && \
+        openssl req -new -x509 -key /root/Kkey/kubelet.key -out /root/Kkey/kubelet.crt -subj "/CN=kubernetes-ca/C=CN/ST=yunnan/L=kunming/OU=panji/O=paas" -days 36500
+      run_once: true
+      delegate_to: 127.0.0.1
+
+    - name: create of backup
+      block:
+        - name: create of backupdir
+          file:
+            state: directory
+            path: /var/lib/kubelet/pki/bak
+        - name: copy old cert
+          shell: |
+            mv /var/lib/kubelet/pki/kubelet.* /var/lib/kubelet/pki/bak
+    - name: send cert
+      block:
+        - name: send crt
+          copy:
+            src: /root/Kkey/kubelet.crt
+            dest: /var/lib/kubelet/pki/
+            mode: 0640
+        - name: send key
+          copy:
+            src: /root/Kkey/kubelet.key
+            dest: /var/lib/kubelet/pki/
+            mode: 0600
+
+    - name: send kubelet config
+      block:
+        - name: cretae of config backup
+          shell: |
+            mv /etc/kubernetes/kubelet.config /etc/kubernetes/kubelet.config.bak
+        - name: send kubelet config
+          copy: 
+            src: kubelet.config
+            dest: /etc/kubernetes/
+            mode: 0644
+
+    - name: restart kubelet
+      service:
+        name: kubelet
+        state: restarted
+
+
+    
